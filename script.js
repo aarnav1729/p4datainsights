@@ -18,7 +18,7 @@ function filterData(data, operation) {
     return data.filter((d) => d.Operation === operation);
 }
 
-let pieChart, shiftBarChart, lineBarChart, cumulativeChart, cumulativeShiftChart;
+let pieChart, shiftBarChart, lineBarChart, cumulativeChart, cumulativeShiftChart, stackedBarChart;
 
 function initializeCharts(data) {
     const finalELData = filterData(data, "Final EL");
@@ -89,9 +89,92 @@ function updateCharts(data) {
     if (lineBarChart) lineBarChart.destroy();
     if (cumulativeChart) cumulativeChart.destroy();
     if (cumulativeShiftChart) cumulativeShiftChart.destroy();
+    if (stackedBarChart) stackedBarChart.destroy();
 
     Chart.register(ChartDataLabels);
 
+
+    const scalingFactor = 25;
+    const okLineData = [
+        data.filter((d) => d.Line === "Line-1" && d.Category === "OK").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0),
+        data.filter((d) => d.Line === "Line-2" && d.Category === "OK").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0),
+        data.filter((d) => d.Line === "Line-3" && d.Category === "OK").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0)
+    ];
+    
+    const mGradeLineData = [
+        data.filter((d) => d.Line === "Line-1" && d.Category === "TOTAL M GRADE").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0) * scalingFactor,
+        data.filter((d) => d.Line === "Line-2" && d.Category === "TOTAL M GRADE").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0) * scalingFactor,
+        data.filter((d) => d.Line === "Line-3" && d.Category === "TOTAL M GRADE").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0) * scalingFactor
+    ];
+    
+    const lGradeLineData = [
+        data.filter((d) => d.Line === "Line-1" && d.Category === "TOTAL L GRADE").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0) * scalingFactor,
+        data.filter((d) => d.Line === "Line-2" && d.Category === "TOTAL L GRADE").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0) * scalingFactor,
+        data.filter((d) => d.Line === "Line-3" && d.Category === "TOTAL L GRADE").reduce((sum, d) => sum + parseFloat(d["A+B+C Shift"]), 0) * scalingFactor
+    ];
+    
+
+    const stackedBarChartCtx = document.getElementById("stackedBarChart").getContext("2d");
+    stackedBarChart = new Chart(stackedBarChartCtx, {
+        type: "bar",
+        data: {
+            labels: ["Line 1", "Line 2", "Line 3"],
+            datasets: [
+                {
+                    label: "OK",
+                    data: okLineData,
+                    backgroundColor: "rgba(0, 204, 0, 0.5)"
+                },
+                {
+                    label: "M Grade",
+                    data: mGradeLineData,
+                    backgroundColor: "rgba(255, 165, 0, 0.5)"
+                },
+                {
+                    label: "L Grade",
+                    data: lGradeLineData,
+                    backgroundColor: "rgba(255, 0, 0, 0.5)"
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    stacked: true
+                },
+                y: {
+                    stacked: true,
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Total Inspections"
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    mode: 'index',
+                    intersect: false
+                },
+                legend: {
+                    display: true,
+                    position: "top"
+                },
+                datalabels: {
+                    display: true,
+                    color: "#333",
+                    font: {
+                        weight: "bold"
+                    },
+                    formatter: (value, ctx) => {
+                        return Math.round(value / scalingFactor);
+                    }
+                }
+            }
+        }
+    });
+    
 
     // Cumulative Line Chart by Shift
     const cumulativeShiftChartCtx = document.getElementById("cumulativeShiftChart").getContext("2d");
