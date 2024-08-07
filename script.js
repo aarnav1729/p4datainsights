@@ -62,6 +62,9 @@ function updateCharts(data) {
     if (shiftBarChart) shiftBarChart.destroy();
     if (lineBarChart) lineBarChart.destroy();
 
+
+    Chart.register(ChartDataLabels);
+
     const pieChartCtx = document.getElementById("pieChart").getContext("2d");
     pieChart = new Chart(pieChartCtx, {
         type: "pie",
@@ -77,6 +80,19 @@ function updateCharts(data) {
         options: {
             responsive: true,
             plugins: {
+                datalabels: {
+                    display: true,
+                    color: '#333',
+                    formatter: (value, ctx) => {
+                        const total = ctx.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(2) + '%';
+                        return `${value} (${percentage})`;
+                    },
+                    font: {
+                        size: 14,
+                        weight: 'bold'
+                    }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -85,6 +101,15 @@ function updateCharts(data) {
                             const total = context.chart.data.datasets[0].data.reduce((a, b) => a + b, 0);
                             const percentage = ((value / total) * 100).toFixed(2);
                             return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                },
+                legend: {
+                    display: true,
+                    position: 'top',
+                    labels: {
+                        font: {
+                            size: 16
                         }
                     }
                 }
@@ -119,6 +144,16 @@ function updateCharts(data) {
                 }
             },
             plugins: {
+                datalabels: {
+                    display: true,
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: Math.round,
+                    color: '#333',
+                    font: {
+                        weight: 'bold'
+                    }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -157,6 +192,16 @@ function updateCharts(data) {
                 }
             },
             plugins: {
+                datalabels: {
+                    display: true,
+                    anchor: 'end',
+                    align: 'top',
+                    formatter: Math.round,
+                    color: '#333',
+                    font: {
+                        weight: 'bold'
+                    }
+                },
                 tooltip: {
                     callbacks: {
                         label: function(context) {
@@ -167,4 +212,22 @@ function updateCharts(data) {
             }
         }
     });
+    console.log("Categories:", categories);
+    console.log("A Shift Data:", aShiftData);
+    console.log("Total OK:", totalOK);
+    console.log("Line 1 Data:", line1Data);
+
+    document.addEventListener('load', function() {
+        if (totalLGrade < 15) { // Assuming a threshold for small slices
+            var pieCanvas = document.getElementById('pieChart');
+            var labelDiv = document.createElement('div');
+            labelDiv.className = 'arrow-label';
+            labelDiv.innerHTML = 'L Grade: ' + totalLGrade + ' (' + ((totalLGrade / (totalOK + totalMGrade + totalLGrade)) * 100).toFixed(2) + '%)';
+            document.body.appendChild(labelDiv);
+    
+            // Adjust the positioning based on the canvas position
+            labelDiv.style.left = pieCanvas.offsetLeft + 100 + 'px'; // Example values
+            labelDiv.style.top = pieCanvas.offsetTop + 100 + 'px'; // Example values
+        }
+    });    
 }

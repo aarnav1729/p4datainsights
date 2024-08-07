@@ -64,3 +64,11 @@ canvas {
     background-color: #ccc;
     font-weight: bold;
 }
+
+.arrow {
+    position: absolute;
+    background-color: black; /* Color of the arrow */
+    height: 2px; /* Thickness of the arrow */
+    transform-origin: 0 50%; /* Rotate around the left center */
+    z-index: 1000;
+}
