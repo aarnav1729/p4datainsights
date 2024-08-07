@@ -18,7 +18,7 @@ function filterData(data, operation) {
     return data.filter((d) => d.Operation === operation);
 }
 
-let pieChart, shiftBarChart, lineBarChart, cumulativeChart;
+let pieChart, shiftBarChart, lineBarChart, cumulativeChart, cumulativeShiftChart;
 
 function initializeCharts(data) {
     const finalELData = filterData(data, "Final EL");
@@ -45,6 +45,7 @@ function initializeCharts(data) {
     };
 
     document.querySelector(".line-btn[data-line='Line-1']").click();
+    document.querySelector(".shift-btn[data-shift='A-Shift']").click();
 }
 
 function calculateCumulativeData(data) {
@@ -87,8 +88,74 @@ function updateCharts(data) {
     if (shiftBarChart) shiftBarChart.destroy();
     if (lineBarChart) lineBarChart.destroy();
     if (cumulativeChart) cumulativeChart.destroy();
+    if (cumulativeShiftChart) cumulativeShiftChart.destroy();
 
     Chart.register(ChartDataLabels);
+
+
+    // Cumulative Line Chart by Shift
+    const cumulativeShiftChartCtx = document.getElementById("cumulativeShiftChart").getContext("2d");
+    cumulativeShiftChart = new Chart(cumulativeShiftChartCtx, {
+        type: "line",
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Cumulative Inspections - A Shift',
+                data: calculateCumulativeDataByShift(data, 'A-Shift'),
+                borderColor: 'rgb(153, 102, 255)',
+                backgroundColor: 'rgba(153, 102, 255, 0.5)'
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Inspection Number"
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Cumulative Panels Inspected"
+                    }
+                }
+            }
+        }
+    });
+
+    document.querySelectorAll(".shift-btn").forEach(btn => {
+        btn.addEventListener('click', function () {
+            document.querySelectorAll(".shift-btn").forEach(button => button.classList.remove("active"));
+            this.classList.add("active");
+
+            const shiftKey = this.getAttribute('data-shift');
+            const filteredData = filterDataByShift(data, shiftKey);
+            const cumulativeData = calculateCumulativeDataByShift(filteredData, shiftKey);
+
+            cumulativeShiftChart.data.labels = filteredData.map((_, idx) => `${idx + 1}`);
+            cumulativeShiftChart.data.datasets[0].data = cumulativeData;
+            cumulativeShiftChart.data.datasets[0].label = `Cumulative Inspections - ${shiftKey}`;
+            cumulativeShiftChart.update();
+        });
+    });
+
+    function filterDataByShift(data, shift) {
+        return data.filter(d => parseFloat(d[shift]) > 0);
+    }
+
+    function calculateCumulativeDataByShift(data, shift) {
+        let cumulativeTotal = 0;
+        return data.map(entry => {
+            cumulativeTotal += parseFloat(entry[shift]);
+            return cumulativeTotal;
+        });
+    }
+
+
 
     const pieChartCtx = document.getElementById("pieChart").getContext("2d");
     pieChart = new Chart(pieChartCtx, {
@@ -187,6 +254,7 @@ function updateCharts(data) {
         },
     });
 
+
     const cumulativeChartCtx = document.getElementById("cumulativeChart").getContext("2d");
     cumulativeChart = new Chart(cumulativeChartCtx, {
         type: "line",
@@ -202,6 +270,13 @@ function updateCharts(data) {
         options: {
             responsive: true,
             scales: {
+                x: {
+                    beginAtZero: true,
+                    title: {
+                        display: true,
+                        text: "Inspection Number"
+                    },
+                },
                 y: {
                     beginAtZero: true,
                     title: {
@@ -222,7 +297,7 @@ function updateCharts(data) {
             const filteredData = data.filter(d => d.Line === lineKey);
             const cumulativeData = calculateCumulativeData(filteredData);
 
-            cumulativeChart.data.labels = filteredData.map((_, idx) => `Inspection ${idx + 1}`);
+            cumulativeChart.data.labels = filteredData.map((_, idx) => `${idx + 1}`);
             cumulativeChart.data.datasets[0].data = cumulativeData;
             cumulativeChart.data.datasets[0].label = `Cumulative Inspections - ${lineKey}`;
             cumulativeChart.update();
