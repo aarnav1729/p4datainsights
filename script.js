@@ -88,9 +88,20 @@ function updateCharts(data) {
                         const percentage = ((value / total) * 100).toFixed(2) + '%';
                         return `${value} (${percentage})`;
                     },
-                    font: {
-                        size: 14,
-                        weight: 'bold'
+                    anchor: (context) => {
+                        const label = context.chart.data.labels[context.dataIndex];
+                        return label === "M Grade" ? 'center' : (label === "L Grade" ? 'end' : 'end');
+                    },
+                    align: (context) => {
+                        const label = context.chart.data.labels[context.dataIndex];
+                        return label === "M Grade" ? 'end' : (label === "L Grade" ? 'start' : 'start');
+                    },
+                    offset: (context) => {
+                        const label = context.chart.data.labels[context.dataIndex];
+                        return label === "M Grade" ? -10 : (label === "L Grade" ? 10 : 4);
+                    },
+                    rotation: (context) => {
+                        return ["M Grade", "L Grade"].includes(context.chart.data.labels[context.dataIndex]) ? -360 : 0;
                     }
                 },
                 tooltip: {
@@ -146,13 +157,17 @@ function updateCharts(data) {
             plugins: {
                 datalabels: {
                     display: true,
-                    anchor: 'end',
+                    anchor: 'center',
                     align: 'top',
                     formatter: Math.round,
                     color: '#333',
                     font: {
                         weight: 'bold'
-                    }
+                    },
+                    offset: 1,
+                    padding: {
+                        top: 0,
+                    },
                 },
                 tooltip: {
                     callbacks: {
@@ -194,7 +209,7 @@ function updateCharts(data) {
             plugins: {
                 datalabels: {
                     display: true,
-                    anchor: 'end',
+                    anchor: 'center',
                     align: 'top',
                     formatter: Math.round,
                     color: '#333',
